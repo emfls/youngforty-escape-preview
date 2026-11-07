@@ -345,7 +345,10 @@ for (const key of ["fast", "sound"]) {
 reducedMotion.addEventListener("change", typeLine);
 document.addEventListener("click", (event) => { if (menu.open && !menu.contains(event.target)) menu.open = false; });
 document.addEventListener("keydown", (event) => {
-  if (event.repeat) { event.preventDefault(); return; }
+  if (event.repeat) {
+    if (!history.open && /^(Enter| |[123])$/.test(event.key)) event.preventDefault();
+    return;
+  }
   if (event.key === "Escape" && menu.open) { menu.open = false; menu.querySelector("summary").focus(); }
   if (menu.open || history.open || event.altKey || event.ctrlKey || event.metaKey) return;
   if (round?.phase === "ready" && /^[123]$/.test(event.key)) { event.preventDefault(); select(Number(event.key) - 1); }
