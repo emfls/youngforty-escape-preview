@@ -1,6 +1,6 @@
 import {roundOpenings} from "./chat.mjs?v=7";
 import {advance, block, choose, initialInterest, intro, maxTurns, newRound, ready, repliesFor} from "./chat-rules.mjs?v=7";
-import {createPlayback, dialoguePages, revealCharacter, scenePhoto, stepPlayback} from "./novel-playback.mjs?v=8";
+import {createPlayback, dialoguePages, revealCharacter, scenePhoto, stepPlayback} from "./novel-playback.mjs?v=10";
 
 const $ = (id) => document.getElementById(id);
 const game = $("game");
@@ -58,7 +58,7 @@ function ping() {
 
 const preparedPhotos = new Map();
 function preparePhoto(situation) {
-  const photo = scenePhoto(situation);
+  const photo = scenePhoto(situation, round?.context);
   if (!preparedPhotos.has(photo.src)) {
     const image = new Image();
     image.src = photo.src;
@@ -68,7 +68,7 @@ function preparePhoto(situation) {
 }
 function showPhoto(situation) {
   const token = ++photoGeneration;
-  const photo = scenePhoto(situation);
+  const photo = scenePhoto(situation, round?.context);
   if ($("scene-photo").getAttribute("src") === photo.src) return;
   preparePhoto(situation).then((loaded) => {
     if (!loaded || token !== photoGeneration) return;
@@ -99,8 +99,9 @@ function renderLine() {
   $("speaker").textContent = page.speaker;
   $("dialogue-text").textContent = letters.slice(0, playback.visible).join("");
   next.dataset.typing = String(typing);
-  next.setAttribute("aria-label", page.speaker + ". " + page.text + (typing ? " · 눌러서 문장 완성" : " · 눌러서 계속"));
-  $("next-label").textContent = typing ? "눌러서 바로 읽기" : "다음 ▸";
+  $("dialogue-line").setAttribute("aria-label", page.speaker + ". " + page.text + (typing ? " · 눌러서 문장 완성" : " · 눌러서 계속"));
+  next.setAttribute("aria-label", typing ? "현재 문장 바로 읽기" : "다음 대사");
+  $("next-label").textContent = typing ? "바로 읽기 ▸" : "다음 ▸";
   if (!typing) $("spoken-line").textContent = page.speaker + ". " + page.text;
 }
 function typeLine() {
@@ -132,6 +133,8 @@ function play(pages, complete) {
   $("choice-area").hidden = true;
   replies.replaceChildren();
   next.disabled = false;
+  next.hidden = false;
+  $("dialogue-line").disabled = false;
   panel.scrollTop = 0;
   recordPage(playback.pages[0]);
   if (playback.pages[0].speaker === "민수") ping();
@@ -206,7 +209,8 @@ function showIntro() {
     round = ready(round);
     game.dataset.mode = "choices";
     next.disabled = true;
-    $("next-label").textContent = "아래에서 답장 고르기";
+    next.hidden = true;
+    $("dialogue-line").disabled = true;
     $("choice-area").hidden = false;
     replies.replaceChildren(...repliesFor(round).map((option, index) => {
       const button = document.createElement("button");
@@ -237,8 +241,9 @@ function select(index) {
   badge.textContent = "호감도 " + formatDelta(decision.delta);
   $("feedback").replaceChildren(badge, document.createTextNode(decision.why));
   $("feedback").hidden = false;
-  const {reaction, next: nextSituation} = round.pending;
-  if (typeof nextSituation === "string") preparePhoto(nextSituation);
+  const {reaction, next: nextSituation, ending} = round.pending;
+  if (ending) preparePhoto("ending-" + ending);
+  else if (typeof nextSituation === "string") preparePhoto(nextSituation);
   play([...dialoguePages([decision.text], "나"), ...dialoguePages(reaction, "민수")], () => {
     round = advance(round);
     if (round.ending) showEnding();
@@ -249,7 +254,7 @@ function select(index) {
 function showEnding() {
   stopPlayback();
   menu.open = false;
-  photoGeneration += 1;
+  showPhoto("ending-" + round.ending.id);
   updateScore();
   replies.replaceChildren();
   game.dataset.mode = "ending";
@@ -318,6 +323,7 @@ $("start").addEventListener("click", start);
 $("restart").addEventListener("click", start);
 $("share").addEventListener("click", copyResult);
 next.addEventListener("click", stepDialogue);
+$("dialogue-line").addEventListener("click", stepDialogue);
 $("open-history").addEventListener("click", openHistory);
 $("close-history").addEventListener("click", () => history.close());
 history.addEventListener("close", typeLine);

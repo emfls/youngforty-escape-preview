@@ -49,8 +49,16 @@ test('an empty playback and a fresh playback have no leftover progress',()=>{
 test('scene imagery uses large originals with an independent focal position',()=>{
  assert.equal(view.scenePhoto('nickname').src,'./images/cafe.jpg');
  assert.equal(view.scenePhoto('profile').src,'./images/running.jpg');
- assert.equal(view.scenePhoto('meal').src,view.scenePhoto('gift').src);
+ assert.notEqual(view.scenePhoto('meal').src,view.scenePhoto('gift').src);
  assert(view.scenePhoto('profile').position);
  assert(view.scenePhoto('nickname').position);
  assert(!view.scenePhoto('nickname').src.includes('profile-v2'));
+});
+
+test('dialogue scenes and endings have distinct situational photographs',()=>{
+ const scenes=['nickname','taste','meal','gift','claimCheck'];
+ assert.equal(new Set(scenes.map(id=>view.scenePhoto(id).src)).size,5);
+ assert.notEqual(view.scenePhoto('ending-group').src,view.scenePhoto('ending-crush').src);
+ assert.equal(view.scenePhoto('gift').src,view.scenePhoto('snack').src);
+ assert.equal(view.scenePhoto('groupPlan',{plan:'snacks'}).src,view.scenePhoto('gift').src);
 });

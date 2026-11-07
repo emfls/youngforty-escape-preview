@@ -1,0 +1,24 @@
+{
+  "generator": "Built-in image_gen",
+  "reference": "images/cafe.jpg",
+  "conversion": "JPEG quality 84; generated original PNGs preserved",
+  "commonPrompt": "Create one photorealistic original game scene, no collage, no text or logos. Use the reference as the identity reference for the SAME fictional adult Korean man Minsu: preserve his exact face, age, hair, navy baseball cap and dark green varsity jacket over white shirt. Natural Korean lifestyle photography, believable subtle comic expression, not exaggerated caricature. Portrait 4:5 framing, waist-up with head and hands visible, face horizontally centered and in upper third; usable for a mobile visual novel. Preserve realistic anatomy, no chat UI, no writing on the photo. ",
+  "assets": [
+    {
+      "path": "images/minsu-music-v1.jpg",
+      "scenePrompt": "In a cozy cafe by the window he proudly shows a generic music playlist on his phone with an amused self-confident half smile. His free hand gestures as if explaining his excellent taste. Phone screen is angled away, no legible interface."
+    },
+    {
+      "path": "images/minsu-dinner-v1.jpg",
+      "scenePrompt": "At a warmly lit casual restaurant table he leans forward with confident welcoming smile, holding an unbranded closed menu and gesturing toward an empty place setting opposite him. Invitation atmosphere, no other person in foreground."
+    },
+    {
+      "path": "images/minsu-gift-v1.jpg",
+      "scenePrompt": "At the familiar wooden cafe table he cautiously pushes a small plain gift bag and coffee forward with one hand while holding his phone with the other. His expression tries to look casual but visibly hopes for approval. No branding or gift-card text."
+    },
+    {
+      "path": "images/minsu-awkward-v1.jpg",
+      "scenePrompt": "At the same cafe table he lowers his phone, briefly looks sideways with a sheepish awkward smile and rubs the back of his neck, as if a small boast has just been disproved. Warm, realistic, understated embarrassment, no tears or cruelty."
+    }
+  ]
+}

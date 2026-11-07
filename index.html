@@ -17,8 +17,8 @@
   <link rel="canonical" href="https://emfls.github.io/youngforty-escape-preview/">
   <link rel="preload" as="image" href="./images/cafe.jpg" fetchpriority="high">
   <link rel="icon" href="./mark.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./chat.css?v=8">
-  <script type="module" src="./messenger.mjs?v=9"></script>
+  <link rel="stylesheet" href="./chat.css?v=10">
+  <script type="module" src="./messenger.mjs?v=10"></script>
 </head>
 <body>
   <main class="novel" id="game" data-mode="welcome" aria-label="영포티 피하기">
@@ -61,9 +61,8 @@
       </div>
       <div id="dialogue" hidden>
         <div class="speaker-row"><span id="speaker" class="nameplate">민수</span><span class="scene-note">개인 대화</span></div>
-        <button id="advance" class="dialogue-advance" type="button" aria-label="다음 대사">
+        <button id="dialogue-line" class="dialogue-line" type="button" aria-label="현재 대사">
           <span id="dialogue-text" class="dialogue-text" aria-hidden="true"></span>
-          <span id="next-label" class="next-label">다음 <span aria-hidden="true">▸</span></span>
         </button>
         <p class="sr-only" id="spoken-line" role="status" aria-live="polite"></p>
         <p id="feedback" class="feedback" role="status" hidden></p>
@@ -71,6 +70,7 @@
           <p id="reply-title" class="eyebrow" tabindex="-1">어떻게 답할까요?</p>
           <div class="replies" id="replies"></div>
         </div>
+        <button id="advance" class="dialogue-advance" type="button" aria-label="다음 대사"><span id="next-label">다음 ▸</span></button>
       </div>
     </section>
 

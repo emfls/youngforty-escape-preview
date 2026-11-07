@@ -49,7 +49,7 @@ meter::-moz-meter-bar { background: var(--gold); }
 .room-options summary { list-style: none; }
 .room-options summary::-webkit-details-marker { display: none; }
 .room-options[open] summary, .icon-button:hover { background: #d6c4a51c; }
-.menu-panel { position: absolute; right: 12px; top: calc(54px + env(safe-area-inset-top)); width: min(270px, calc(100% - 24px)); border: 1px solid #786b57; border-radius: 12px; padding: 7px; background: #14212cfb; box-shadow: 0 12px 35px #0007; }
+.menu-panel { position: absolute; z-index: 4; right: 12px; top: 100%; width: min(270px, calc(100% - 24px)); border: 1px solid #786b57; border-radius: 12px; padding: 7px; background: #14212c; box-shadow: 0 12px 35px #0007; }
 .menu-panel p { padding: 7px 10px; font-size: 12px; color: var(--gold); }
 .menu-panel :is(label, a, button) { display: flex; align-items: center; gap: 9px; width: 100%; min-height: 48px; padding: 9px 10px; font-size: 15px; border: 0; border-radius: 7px; background: transparent; text-align: left; }
 .menu-panel :is(label, a, button):hover { background: #ffffff0a; }
@@ -61,9 +61,9 @@ meter::-moz-meter-bar { background: var(--gold); }
 .photo-stage::after { content: ""; position: absolute; pointer-events: none; inset: auto 0 0; height: 90px; background: linear-gradient(transparent, #111c28); }
 .photo-caption { position: absolute; z-index: 1; bottom: 12px; left: 22px; color: #f7efe6d9; font-size: 10px; letter-spacing: .03em; text-shadow: 0 1px 5px #000; }
 .story-panel { position: relative; flex: none; min-height: 24dvh; max-height: 63dvh; padding: 7px max(22px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(22px, env(safe-area-inset-left)); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #897454 transparent; background: var(--panel); }
-.novel[data-mode="choices"] .story-panel { display: flex; max-height: min(64dvh, calc(100dvh - 180px - env(safe-area-inset-top))); overflow: hidden; }
-#dialogue { display: flex; flex-direction: column; min-height: 0; width: 100%; }
-.speaker-row, .dialogue-advance, .feedback { flex: none; }
+.novel:is([data-mode="dialogue"], [data-mode="choices"]) .story-panel { display: flex; height: min(clamp(290px, 44dvh, 470px), calc(100dvh - 180px - env(safe-area-inset-top))); min-height: 0; max-height: none; overflow: hidden; }
+#dialogue { display: flex; flex: 1; flex-direction: column; min-height: 0; width: 100%; }
+.speaker-row, .dialogue-line, .dialogue-advance, .feedback { flex: none; }
 .novel[data-mode="welcome"] .story-panel { padding-top: 4px; padding-bottom: max(22px, env(safe-area-inset-bottom)); }
 .eyebrow { color: var(--gold); font-size: 11px; letter-spacing: .025em; font-weight: 600; }
 .welcome h2 { margin: 8px 0 12px; font-size: clamp(28px, 7.7vw, 38px); line-height: 1.22; letter-spacing: -.045em; font-weight: 650; }
@@ -74,19 +74,18 @@ meter::-moz-meter-bar { background: var(--gold); }
 .speaker-row { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
 .nameplate { color: var(--gold); font-size: 14px; font-weight: 750; border-bottom: 1px solid #8c7451; padding-bottom: 2px; min-width: 28px; }
 .scene-note { color: #8997a3; font-size: 10px; }
-.dialogue-advance { display: block; width: 100%; padding: 0; border: 0; background: transparent; text-align: left; }
+.dialogue-line { display: block; width: 100%; padding: 0; border: 0; background: transparent; text-align: left; }
 .dialogue-text { display: block; min-height: 3.4em; font-size: 18px; font-weight: 450; line-height: 1.75; letter-spacing: -.018em; white-space: pre-wrap; overflow-wrap: anywhere; word-break: keep-all; }
-.dialogue-advance:disabled { color: inherit; }
-.novel[data-mode="choices"] .next-label { display: none; }
-.next-label { display: flex; justify-content: flex-end; align-items: center; gap: 8px; min-height: 32px; color: var(--gold); font-size: 11px; }
-.dialogue-advance[data-typing="true"] .next-label { color: #9ba6af; }
+.dialogue-line:disabled { color: inherit; }
+.dialogue-advance { margin-top: auto; }
+#next-label { width: 100%; text-align: center; }
 .feedback { margin: 8px 0; color: #aeb7bd; font-size: 11px; line-height: 1.6; }
 .feedback strong { color: var(--gold); margin-right: 5px; }
 .choice-area { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding-top: 10px; border-top: 1px solid #43505d; margin-top: 10px; }
 .choice-area .eyebrow { margin-bottom: 9px; }
 .replies { display: grid; gap: 9px; padding-bottom: 2px; }
-.replies button { display: flex; align-items: flex-start; gap: 10px; min-height: 50px; width: 100%; padding: 12px; border: 1px solid #7b7467; border-radius: 5px; background: #192733; text-align: left; font-size: 16px; line-height: 1.65; letter-spacing: -.02em; overflow-wrap: anywhere; word-break: keep-all; }
-.replies button:hover { background: #283541; border-color: var(--gold); }
+.replies button, .dialogue-advance { display: flex; align-items: flex-start; gap: 10px; min-height: 50px; width: 100%; padding: 12px; border: 1px solid #7b7467; border-radius: 5px; background: #192733; text-align: left; font-size: 16px; line-height: 1.65; letter-spacing: -.02em; overflow-wrap: anywhere; word-break: keep-all; }
+.replies button:hover, .dialogue-advance:hover { background: #283541; border-color: var(--gold); }
 .replies button > span { color: var(--gold); flex: none; font-size: 11px; padding-top: 4px; }
 .result { position: absolute; z-index: 2; bottom: 0; inset-inline: 0; max-height: 76dvh; display: flex; flex-direction: column; border-top: 1px solid #b39b744d; background: #101c28f5; box-shadow: 0 -40px 60px #111c2845; padding: 24px max(24px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left)); }
 .result-content { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
@@ -122,7 +121,7 @@ meter::-moz-meter-bar { background: var(--gold); }
   .welcome h2 { font-size: 28px; }
   .welcome .primary { margin-top: 14px; }
   .fiction { margin-top: 8px; }
-  .replies button { padding: 10px; }
+  .replies button, .dialogue-advance { padding: 10px; }
   .dialogue-text { font-size: 17px; }
 }
 @media (max-height: 650px) {
