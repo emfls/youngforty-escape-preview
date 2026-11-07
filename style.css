@@ -46,10 +46,10 @@ h1 em { color: var(--mint); font-style: normal; }
 .scene figcaption { position: absolute; bottom: 14px; left: 14px; right: 14px; width: fit-content; display: flex; align-items: center; gap: .55rem; padding: .42rem .7rem; color: white; background: #151b19ed; border-radius: 7px; font-size: .78rem; }
 .story { display: flex; flex-direction: column; justify-content: center; padding: clamp(21px, 3.3vw, 40px); min-width: 0; }
 .story-tag { color: var(--mint); font-size: .77rem; font-weight: 850; letter-spacing: .07em; }
-.story-tag[data-tone="miss"] { color: var(--coral); }
 h2 { margin: .26rem 0 .55rem; font-size: clamp(1.45rem, 3vw, 2.25rem); line-height: 1.2; letter-spacing: -.06em; word-break: keep-all; }
 .story-copy { color: var(--muted); font-size: .94rem; }
 .quote { margin-top: 14px; padding: 12px 14px; background: #293632; border-left: 3px solid #a9cb83; border-radius: 0 8px 8px 0; }
+.quote figure + figure { margin-top: .65rem; }
 .quote figcaption { color: var(--mint); font-size: .74rem; font-weight: 800; }
 blockquote { margin-top: 3px; font-size: .96rem; }
 .actions { display: grid; gap: 8px; margin-top: 18px; }
@@ -62,7 +62,7 @@ blockquote { margin-top: 3px; font-size: .96rem; }
 .choice span { flex: none; display: grid; place-items: center; min-width: 1.65rem; height: 1.65rem; padding-inline: .2rem; border-radius: 5px; background: #17231d; color: var(--mint); font-size: .72rem; font-weight: 800; }
 .recap { margin-top: 14px; padding: 0; list-style: none; }
 .recap li { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: .35rem 0; border-top: 1px solid var(--line); font-size: .86rem; }
-.recap strong { white-space: nowrap; color: var(--mint); }
+.recap strong { text-align: right; color: var(--mint); }
 .recap strong[data-outcome="miss"] { color: var(--coral); }
 .note { margin: 12px 0 22px; color: var(--muted); font-size: .8rem; }
 .banner { display: flex; gap: 10px 18px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 15px 18px; margin-bottom: 36px; border: 1px solid var(--line); border-radius: 12px; color: var(--muted); font-size: .85rem; }
