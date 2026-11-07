@@ -1,5 +1,5 @@
-import {situations, roundOpenings} from "./chat.mjs?v=5";
-import {advance, block, choose, initialInterest, intro, maxTurns, newRound, ready} from "./chat-rules.mjs?v=5";
+import {situations, roundOpenings} from "./chat.mjs?v=6";
+import {advance, block, choose, initialInterest, intro, maxTurns, newRound, ready} from "./chat-rules.mjs?v=6";
 
 const $ = (id) => document.getElementById(id);
 const conversation = $("conversation");

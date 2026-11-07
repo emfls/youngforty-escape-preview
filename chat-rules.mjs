@@ -1,4 +1,4 @@
-import {endings, situations, roundOpenings} from "./chat.mjs?v=5";
+import {endings, situations, roundOpenings} from "./chat.mjs?v=6";
 
 export const initialInterest = 60;
 export const maxTurns = 8;
