@@ -1,21 +1,23 @@
 import {roundOpenings} from "./chat.mjs?v=7";
 import {advance, block, choose, initialInterest, intro, maxTurns, newRound, ready, repliesFor} from "./chat-rules.mjs?v=7";
+import {createPlayback, dialoguePages, revealCharacter, scenePhoto, stepPlayback} from "./novel-playback.mjs?v=8";
 
 const $ = (id) => document.getElementById(id);
-const conversation = $("conversation");
-const log = $("chat-log");
+const game = $("game");
+const panel = $("story-panel");
 const menu = $("room-options");
+const history = $("history-dialog");
 const replies = $("replies");
-const skip = $("skip");
+const next = $("advance");
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 const clock = new Intl.DateTimeFormat("ko-KR", {hour: "numeric", minute: "2-digit"});
 const storageKey = "youngforty-messenger-settings-v1";
-
 let round = null;
+let playback = null;
+let afterPlayback = null;
 let timer = null;
 let generation = 0;
-let skipPlayback = null;
-let unread = null;
+let photoGeneration = 0;
 let audio = null;
 
 function readSettings() {
@@ -28,17 +30,10 @@ function readSettings() {
     return {fast: false, sound: false, nextOpening: 0};
   }
 }
-
 const settings = readSettings();
-
 function saveSettings() {
-  try {
-    localStorage.setItem(storageKey, JSON.stringify(settings));
-  } catch {
-    // Browser storage can be disabled.
-  }
+  try { localStorage.setItem(storageKey, JSON.stringify(settings)); } catch { /* Storage can be disabled. */ }
 }
-
 function enableAudio() {
   if (!settings.sound) return;
   const Audio = window.AudioContext ?? window.webkitAudioContext;
@@ -46,11 +41,8 @@ function enableAudio() {
   try {
     audio ??= new Audio();
     if (audio.state === "suspended") audio.resume().catch(() => {});
-  } catch {
-    audio = null;
-  }
+  } catch { audio = null; }
 }
-
 function ping() {
   if (!settings.sound || audio?.state !== "running") return;
   const tone = audio.createOscillator();
@@ -64,101 +56,105 @@ function ping() {
   tone.stop(time + 0.08);
 }
 
-function scrollDown() {
-  conversation.scrollTop = conversation.scrollHeight;
-}
-
-function message(text, side, showUnread = false) {
-  const time = clock.format(new Date());
-  round.messages.push({text, side, time});
-  const item = document.createElement("li");
-  item.className = "message " + side;
-  if (side === "system") {
-    item.textContent = text;
-  } else {
-    const content = document.createElement("div");
-    content.className = "message-content";
-    if (side === "received") {
-      const avatar = document.createElement("img");
-      avatar.className = "message-avatar";
-      avatar.src = "./images/minsu-profile-v2.jpg";
-      avatar.width = avatar.height = 30;
-      avatar.alt = "";
-      item.append(avatar);
-      const name = document.createElement("span");
-      name.className = "message-name";
-      name.textContent = "민수";
-      content.append(name);
-    }
-    const bubble = document.createElement("p");
-    bubble.className = "bubble";
-    bubble.textContent = text;
-    content.append(bubble);
-    const stamp = document.createElement("div");
-    stamp.className = "stamp";
-    if (showUnread) {
-      unread = document.createElement("span");
-      unread.className = "unread";
-      unread.textContent = "1";
-      unread.setAttribute("aria-label", "읽지 않음");
-      stamp.append(unread);
-    }
-    const when = document.createElement("span");
-    when.textContent = time;
-    stamp.append(when);
-    item.append(content, stamp);
+const preparedPhotos = new Map();
+function preparePhoto(situation) {
+  const photo = scenePhoto(situation);
+  if (!preparedPhotos.has(photo.src)) {
+    const image = new Image();
+    image.src = photo.src;
+    preparedPhotos.set(photo.src, image.decode().then(() => photo).catch(() => null));
   }
-  log.append(item);
-  scrollDown();
+  return preparedPhotos.get(photo.src);
 }
-
-function markRead() {
-  unread?.remove();
-  unread = null;
+function showPhoto(situation) {
+  const token = ++photoGeneration;
+  const photo = scenePhoto(situation);
+  if ($("scene-photo").getAttribute("src") === photo.src) return;
+  preparePhoto(situation).then((loaded) => {
+    if (!loaded || token !== photoGeneration) return;
+    $("scene-photo").src = loaded.src;
+    $("scene-photo").alt = loaded.alt;
+    $("scene-photo").style.objectPosition = loaded.position;
+    $("photo-caption").textContent = loaded.caption;
+  });
 }
-
-function stopPlayback() {
+function cancelTimer() {
   generation += 1;
   clearTimeout(timer);
   timer = null;
-  skipPlayback = null;
-  $("typing").hidden = true;
-  skip.hidden = true;
-  markRead();
 }
-
-function play(lines, complete, immediate = false) {
-  const token = ++generation;
-  let index = 0;
-  function finish() {
-    stopPlayback();
-    complete();
-  }
-  function sendNext() {
-    if (token !== generation) return;
-    markRead();
-    message(lines[index++], "received");
-    ping();
-    if (index === lines.length) finish();
-    else timer = setTimeout(sendNext, 270);
-  }
-  skipPlayback = () => {
-    if (token !== generation) return;
-    clearTimeout(timer);
-    markRead();
-    while (index < lines.length) message(lines[index++], "received");
-    finish();
-  };
-  if (immediate || settings.fast || reducedMotion.matches || !lines.length) {
-    skipPlayback();
+function stopPlayback() {
+  cancelTimer();
+  playback = null;
+  afterPlayback = null;
+  next.dataset.typing = "false";
+}
+function recordPage(page) {
+  round.messages.push({text: page.text, side: page.speaker === "나" ? "sent" : "received", time: clock.format(new Date())});
+}
+function renderLine() {
+  const page = playback.pages[playback.index];
+  const letters = Array.from(page.text);
+  const typing = playback.visible < letters.length;
+  $("speaker").textContent = page.speaker;
+  $("dialogue-text").textContent = letters.slice(0, playback.visible).join("");
+  next.dataset.typing = String(typing);
+  next.setAttribute("aria-label", page.speaker + ". " + page.text + (typing ? " · 눌러서 문장 완성" : " · 눌러서 계속"));
+  $("next-label").textContent = typing ? "눌러서 바로 읽기" : "다음 ▸";
+  if (!typing) $("spoken-line").textContent = page.speaker + ". " + page.text;
+}
+function typeLine() {
+  cancelTimer();
+  if (!playback || playback.done || history.open || menu.open) return;
+  const page = playback.pages[playback.index];
+  if (settings.fast || reducedMotion.matches || page.speaker === "나") {
+    if (playback.visible < Array.from(page.text).length) playback = stepPlayback(playback);
+    renderLine();
     return;
   }
-  $("typing").hidden = false;
-  skip.hidden = false;
-  timer = setTimeout(sendNext, 330);
-  scrollDown();
+  const token = generation;
+  function tick() {
+    if (token !== generation || !playback || history.open || menu.open) return;
+    playback = revealCharacter(playback);
+    renderLine();
+    if (next.dataset.typing === "true") timer = setTimeout(tick, 22);
+    else timer = null;
+  }
+  renderLine();
+  if (next.dataset.typing === "true") timer = setTimeout(tick, 22);
 }
-
+function play(pages, complete) {
+  stopPlayback();
+  playback = createPlayback(pages);
+  afterPlayback = complete;
+  if (playback.done) { stopPlayback(); complete(); return; }
+  game.dataset.mode = "dialogue";
+  $("choice-area").hidden = true;
+  replies.replaceChildren();
+  next.disabled = false;
+  panel.scrollTop = 0;
+  recordPage(playback.pages[0]);
+  if (playback.pages[0].speaker === "민수") ping();
+  typeLine();
+}
+function stepDialogue() {
+  if (!playback || history.open || menu.open || round?.ending) return;
+  cancelTimer();
+  const previous = playback.index;
+  playback = stepPlayback(playback);
+  if (playback.done) {
+    const complete = afterPlayback;
+    stopPlayback();
+    complete();
+    return;
+  }
+  if (playback.index !== previous) {
+    recordPage(playback.pages[playback.index]);
+    if (playback.pages[playback.index].speaker === "민수") ping();
+    panel.scrollTop = 0;
+  }
+  typeLine();
+}
 function updateScore() {
   const score = round?.score ?? initialInterest;
   $("score").value = score;
@@ -166,108 +162,101 @@ function updateScore() {
   $("turn-count").textContent = (round?.decisions.length ?? 0) + " / " + maxTurns + "턴";
   $("block").disabled = Boolean(round?.ending);
 }
-
 function resetView() {
   stopPlayback();
+  photoGeneration += 1;
+  if (history.open) history.close();
   menu.open = false;
-  log.replaceChildren();
   replies.replaceChildren();
   $("feedback").hidden = true;
   $("result").hidden = true;
-  $("end-actions").hidden = true;
-  $("reply-title").hidden = false;
+  $("choice-area").hidden = true;
   $("copy-fallback").hidden = true;
   $("copy-status").textContent = "";
+  $("spoken-line").textContent = "";
+  panel.hidden = false;
+  panel.scrollTop = 0;
 }
-
-function showThread() {
-  $("welcome").hidden = true;
-  $("thread").hidden = false;
-  $("composer").hidden = false;
-  $("day").textContent = new Intl.DateTimeFormat("ko-KR", {month: "long", day: "numeric", weekday: "long"}).format(new Date());
-  updateScore();
-}
-
 function showWelcome() {
   resetView();
   round = null;
-  updateScore();
+  game.dataset.mode = "welcome";
   $("welcome").hidden = false;
-  $("thread").hidden = true;
-  $("composer").hidden = true;
-  conversation.scrollTop = 0;
+  $("dialogue").hidden = true;
+  showPhoto("nickname");
+  updateScore();
   $("welcome-title").focus({preventScroll: true});
 }
-
 function start() {
   resetView();
   round = newRound(settings.nextOpening);
   settings.nextOpening = (settings.nextOpening + 1) % roundOpenings.length;
   saveSettings();
   enableAudio();
-  showThread();
+  $("welcome").hidden = true;
+  $("dialogue").hidden = false;
+  updateScore();
   showIntro();
-  if (skipPlayback) skip.focus({preventScroll: true});
+  next.focus({preventScroll: true});
 }
-
 function showIntro() {
-  $("reply-title").textContent = "민수가 톡을 보내는 중";
-  play(intro(round), () => {
+  showPhoto(round.situation);
+  $("feedback").hidden = true;
+  play(dialoguePages(intro(round), "민수"), () => {
     round = ready(round);
-    const options = repliesFor(round);
-    replies.replaceChildren(...options.map((option, index) => {
+    game.dataset.mode = "choices";
+    next.disabled = true;
+    $("next-label").textContent = "아래에서 답장 고르기";
+    $("choice-area").hidden = false;
+    replies.replaceChildren(...repliesFor(round).map((option, index) => {
       const button = document.createElement("button");
       button.type = "button";
       const number = document.createElement("span");
-      number.textContent = String(index + 1);
+      number.textContent = String(index + 1).padStart(2, "0");
       number.setAttribute("aria-hidden", "true");
       button.append(number, document.createTextNode(option.text));
-      button.addEventListener("click", () => select(index));
+      button.addEventListener("click", (event) => { event.stopPropagation(); select(index); });
       return button;
     }));
-    $("reply-title").textContent = "답장 고르기";
     $("reply-title").focus({preventScroll: true});
-    scrollDown();
+    panel.scrollTop = 0;
   });
 }
-
 function formatDelta(delta) {
   return delta < 0 ? "−" + Math.abs(delta) : delta > 0 ? "+" + delta : "±0";
 }
-
 function select(index) {
-  if (!round) return;
+  if (!round || playback || history.open || menu.open) return;
   const locked = choose(round, index);
   if (round === locked) return;
   round = locked;
   for (const button of replies.children) button.disabled = true;
   const decision = round.decisions.at(-1);
-  message(decision.text, "sent", true);
   updateScore();
   const badge = document.createElement("strong");
   badge.textContent = "호감도 " + formatDelta(decision.delta);
-  $("feedback").replaceChildren(badge, document.createTextNode(" " + decision.why));
+  $("feedback").replaceChildren(badge, document.createTextNode(decision.why));
   $("feedback").hidden = false;
-  replies.replaceChildren();
-  $("reply-title").textContent = "민수가 답장하는 중";
-  const {reaction, reason} = round.pending;
-  play(reaction, () => {
+  const {reaction, next: nextSituation} = round.pending;
+  if (typeof nextSituation === "string") preparePhoto(nextSituation);
+  play([...dialoguePages([decision.text], "나"), ...dialoguePages(reaction, "민수")], () => {
     round = advance(round);
     if (round.ending) showEnding();
     else showIntro();
-  }, reason === "request");
-  if (skipPlayback) skip.focus({preventScroll: true});
+  });
+  next.focus({preventScroll: true});
 }
-
 function showEnding() {
   stopPlayback();
   menu.open = false;
+  photoGeneration += 1;
   updateScore();
   replies.replaceChildren();
-  $("reply-title").hidden = true;
+  game.dataset.mode = "ending";
+  panel.hidden = true;
   const ending = round.ending;
   const blocked = ending.reason === "block";
-  message(blocked ? "민수를 차단했어요." : "대화가 종료됐어요.", "system");
+  round.messages.push({text: blocked ? "민수를 차단했어요." : "대화가 종료됐어요.", side: "system"});
   $("result-status").textContent = ending.id === "crush" ? "대화 종료" : blocked ? "차단으로 대화 종료" : "대화 정리";
   $("ending-title").textContent = ending.title;
   $("ending-copy").textContent = ending.copy;
@@ -286,23 +275,32 @@ function showEnding() {
     return item;
   }));
   $("highlights").hidden = $("highlights-title").hidden = !top.length;
-  $("end-actions").hidden = false;
-  $("view-result").focus({preventScroll: true});
-  scrollDown();
-}
-
-function showResult() {
   $("result").hidden = false;
+  $("result").querySelector(".result-content").scrollTop = 0;
   $("ending-title").focus({preventScroll: true});
-  conversation.scrollTop = $("result").offsetTop - 10;
 }
-
+function openHistory() {
+  menu.open = false;
+  cancelTimer();
+  const messages = round?.messages ?? [];
+  $("history-log").replaceChildren(...messages.map(({text, side}) => {
+    const item = document.createElement("li");
+    item.className = side;
+    const name = document.createElement("strong");
+    name.textContent = side === "sent" ? "나" : side === "received" ? "민수" : "대화 기록";
+    const line = document.createElement("p");
+    line.textContent = text;
+    item.append(name, line);
+    return item;
+  }));
+  $("history-empty").hidden = messages.length > 0;
+  history.showModal();
+  $("history-log").scrollTop = $("history-log").scrollHeight;
+}
 async function copyResult() {
   const current = round;
   if (!current?.ending) return;
-  showResult();
-  const text = "영포티 피하기 · " + current.ending.title + "\n"
-    + current.decisions.length + "턴 · 호감도 " + initialInterest + " → " + current.score;
+  const text = "영포티 피하기 · " + current.ending.title + "\n" + current.decisions.length + "턴 · 호감도 " + initialInterest + " → " + current.score;
   try {
     await navigator.clipboard.writeText(text);
     if (round !== current) return;
@@ -315,14 +313,15 @@ async function copyResult() {
     $("share-text").value = text;
     $("share-text").select();
   }
-  scrollDown();
 }
-
 $("start").addEventListener("click", start);
 $("restart").addEventListener("click", start);
-$("view-result").addEventListener("click", showResult);
 $("share").addEventListener("click", copyResult);
-skip.addEventListener("click", () => skipPlayback?.());
+next.addEventListener("click", stepDialogue);
+$("open-history").addEventListener("click", openHistory);
+$("close-history").addEventListener("click", () => history.close());
+history.addEventListener("close", typeLine);
+menu.addEventListener("toggle", () => { if (menu.open) cancelTimer(); else typeLine(); });
 $("back").addEventListener("click", (event) => {
   if (!round || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   event.preventDefault();
@@ -330,11 +329,7 @@ $("back").addEventListener("click", (event) => {
 });
 $("block").addEventListener("click", () => {
   if (round?.ending) return;
-  if (!round) {
-    resetView();
-    round = newRound();
-    showThread();
-  }
+  if (!round) { round = newRound(); $("welcome").hidden = true; }
   round = block(round);
   showEnding();
 });
@@ -343,24 +338,15 @@ for (const key of ["fast", "sound"]) {
   $(key).addEventListener("change", (event) => {
     settings[key] = event.target.checked;
     saveSettings();
-    if (key === "fast" && settings.fast) skipPlayback?.();
+    if (key === "fast") typeLine();
     if (key === "sound" && settings.sound) enableAudio();
   });
 }
-reducedMotion.addEventListener("change", () => {
-  if (reducedMotion.matches) skipPlayback?.();
-});
-document.addEventListener("click", (event) => {
-  if (menu.open && !menu.contains(event.target)) menu.open = false;
-});
+reducedMotion.addEventListener("change", typeLine);
+document.addEventListener("click", (event) => { if (menu.open && !menu.contains(event.target)) menu.open = false; });
 document.addEventListener("keydown", (event) => {
-  if (menu.open && event.key === "Escape") {
-    menu.open = false;
-    menu.querySelector("summary").focus();
-  }
-  if (menu.open || event.repeat || event.altKey || event.ctrlKey || event.metaKey) return;
-  if (round?.phase === "ready" && /^[123]$/.test(event.key)) {
-    event.preventDefault();
-    select(Number(event.key) - 1);
-  }
+  if (event.repeat) { event.preventDefault(); return; }
+  if (event.key === "Escape" && menu.open) { menu.open = false; menu.querySelector("summary").focus(); }
+  if (menu.open || history.open || event.altKey || event.ctrlKey || event.metaKey) return;
+  if (round?.phase === "ready" && /^[123]$/.test(event.key)) { event.preventDefault(); select(Number(event.key) - 1); }
 });

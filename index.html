@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
-  <meta name="theme-color" content="#eff5f9">
+  <meta name="theme-color" content="#111922">
   <title>영포티 피하기 | 민수와의 대화</title>
   <meta name="description" content="보드게임 동호회 지인 민수와의 대화. 답장으로 상대의 혼자만의 호감도를 낮추는 한국어 선택형 게임.">
   <meta name="robots" content="noindex, follow">
@@ -15,81 +15,84 @@
   <meta property="og:image" content="https://emfls.github.io/youngforty-escape-preview/images/cafe-open.jpg">
   <meta property="og:image:alt" content="영포티 피하기의 가상 카페 장면">
   <link rel="canonical" href="https://emfls.github.io/youngforty-escape-preview/">
+  <link rel="preload" as="image" href="./images/cafe.jpg" fetchpriority="high">
   <link rel="icon" href="./mark.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./chat.css">
-  <script type="module" src="./messenger.mjs?v=7"></script>
+  <link rel="stylesheet" href="./chat.css?v=8">
+  <script type="module" src="./messenger.mjs?v=8"></script>
 </head>
 <body>
-  <main class="phone" aria-label="영포티 피하기">
-    <header class="room-bar">
-      <a class="icon-button" id="back" href="./episodes.html" aria-label="뒤로가기">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5-7 7 7 7"/></svg>
-      </a>
-      <div class="profile">
-        <img class="avatar" src="./images/minsu-profile-v2.jpg" width="42" height="42" alt="">
-        <div><h1>민수 😎</h1><p>보드게임 동호회 · 개인 대화</p></div>
+  <main class="novel" id="game" data-mode="welcome" aria-label="영포티 피하기">
+    <header class="game-header">
+      <div class="toolbar">
+        <a class="icon-button" id="back" href="./episodes.html" aria-label="뒤로가기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5-7 7 7 7"/></svg></a>
+        <div class="game-title"><h1>영포티 피하기</h1><span>민수 편</span></div>
+        <button class="icon-button" id="open-history" type="button" aria-label="대화 기록"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v12H8l-4 3Z M8 9h8 M8 13h5"/></svg></button>
+        <details id="room-options" class="room-options">
+          <summary class="icon-button" aria-label="게임 메뉴"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14 M5 12h14 M5 17h14"/></svg></summary>
+          <div class="menu-panel">
+            <p>대화 설정</p>
+            <label><input id="fast" type="checkbox"> 타이핑 생략</label>
+            <label><input id="sound" type="checkbox"> 알림 소리</label>
+            <a href="./episodes.html">사진 이야기 목록</a>
+            <button id="block" type="button">차단하고 대화 끝내기</button>
+          </div>
+        </details>
       </div>
-      <details class="room-options" id="room-options">
-        <summary class="icon-button" aria-label="더보기">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
-        </summary>
-        <div class="menu-panel">
-          <p>대화 설정</p>
-          <label><input type="checkbox" id="fast"> 빠르게 진행</label>
-          <label><input type="checkbox" id="sound"> 알림 소리</label>
-          <a href="./episodes.html">사진 이야기 목록</a>
-          <button id="block" type="button">민수 차단하고 대화 끝내기</button>
-        </div>
-      </details>
+      <div class="interest">
+        <label for="score">혼자만의 호감도 <strong id="score-value">60 / 100</strong></label>
+        <span id="turn-count">0 / 8턴</span>
+        <meter id="score" min="0" max="100" value="60"></meter>
+      </div>
     </header>
 
-    <div class="interest">
-      <div class="interest-label"><label for="score">상대의 혼자만의 호감도</label><strong id="score-value">60 / 100</strong></div>
-      <meter id="score" min="0" max="100" value="60"></meter>
-      <span id="turn-count">0 / 8턴</span>
+    <div class="photo-stage" id="photo-stage">
+      <img id="scene-photo" src="./images/cafe.jpg" width="1280" height="720" fetchpriority="high" decoding="async" alt="카페 테이블에 앉은 가상의 민수">
+      <p class="photo-caption" id="photo-caption">민수의 사진 · 동네 카페</p>
     </div>
 
-    <section class="conversation" id="conversation" tabindex="0" aria-label="대화 기록">
+    <section class="story-panel" id="story-panel">
       <div class="welcome" id="welcome">
-        <p class="caption">영포티 피하기</p>
-        <h2 id="welcome-title" tabindex="-1">민수에게 톡이 왔어요</h2>
-        <p>앞선 톡에서 단서를 찾고 답장을 골라보세요. 선을 긋거나, 단체 약속으로 돌리거나, 민수의 말을 되돌려 줄 수도 있어요.</p>
-        <button class="yellow" type="button" id="start">대화 시작 <span aria-hidden="true">→</span></button>
+        <p class="eyebrow">어제는 그냥 동호회 지인이었는데.</p>
+        <h2 id="welcome-title" tabindex="-1">민수에게<br>톡이 왔어요.</h2>
+        <p class="welcome-copy">말 속의 단서를 기억하고, 답장을 골라<br>혼자 시작한 썸에서 빠져나오세요.</p>
+        <button class="primary" id="start" type="button">대화 시작 <span aria-hidden="true">↗</span></button>
         <p class="fiction">등장인물은 모두 가상의 성인입니다.</p>
-        <noscript><p>게임을 시작하려면 자바스크립트를 켜 주세요.</p></noscript>
+        <noscript>게임을 시작하려면 자바스크립트를 켜 주세요.</noscript>
       </div>
-      <div id="thread" hidden>
-        <p class="day" id="day"></p>
-        <ol id="chat-log" class="chat-log" role="log" aria-label="민수와 주고받은 메시지"></ol>
-        <div class="typing" id="typing" hidden>
-          <img src="./images/minsu-profile-v2.jpg" width="30" height="30" alt="">
-          <span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span>
-          <span class="sr-only">민수가 입력 중입니다.</span>
+      <div id="dialogue" hidden>
+        <div class="speaker-row"><span id="speaker" class="nameplate">민수</span><span class="scene-note">개인 대화</span></div>
+        <button id="advance" class="dialogue-advance" type="button" aria-label="다음 대사">
+          <span id="dialogue-text" class="dialogue-text" aria-hidden="true"></span>
+          <span id="next-label" class="next-label">다음 <span aria-hidden="true">▸</span></span>
+        </button>
+        <p class="sr-only" id="spoken-line" role="status" aria-live="polite"></p>
+        <p id="feedback" class="feedback" role="status" hidden></p>
+        <div class="choice-area" id="choice-area" hidden>
+          <p id="reply-title" class="eyebrow" tabindex="-1">어떻게 답할까요?</p>
+          <div class="replies" id="replies"></div>
         </div>
-        <section class="result" id="result" hidden aria-labelledby="ending-title">
-          <p class="caption" id="result-status"></p>
-          <h2 id="ending-title" tabindex="-1"></h2>
-          <p id="ending-copy"></p>
-          <dl><div><dt>진행 턴</dt><dd id="result-turns"></dd></div><div><dt>호감도</dt><dd id="result-score"></dd></div></dl>
-          <h3 id="highlights-title">이 대화에 남은 답장</h3>
-          <ul id="highlights"></ul>
-          <label id="copy-fallback" hidden>결과 문구<textarea id="share-text" readonly rows="3"></textarea></label>
-          <p id="copy-status" class="copy-status" role="status"></p>
-        </section>
       </div>
     </section>
 
-    <footer class="composer" id="composer" hidden>
-      <p id="feedback" class="feedback" role="status" hidden></p>
-      <p id="reply-title" class="composer-title" tabindex="-1">답장 고르기</p>
-      <div id="replies" class="replies"></div>
-      <button type="button" id="skip" class="skip" hidden>바로 읽기 <span aria-hidden="true">⏩</span></button>
-      <div class="end-actions" id="end-actions" hidden>
-        <button type="button" id="view-result" class="yellow">결과 보기</button>
-        <button type="button" id="restart">다시 하기</button>
-        <button type="button" id="share">결과 복사</button>
+    <section class="result" id="result" hidden aria-labelledby="ending-title">
+      <div class="result-content">
+        <p class="eyebrow" id="result-status"></p>
+        <h2 id="ending-title" tabindex="-1"></h2>
+        <p id="ending-copy"></p>
+        <dl class="result-stats"><div><dt>진행</dt><dd id="result-turns"></dd></div><div><dt>호감도</dt><dd id="result-score"></dd></div></dl>
+        <h3 id="highlights-title"></h3><ul id="highlights"></ul>
+        <label id="copy-fallback" hidden>결과 문구<textarea id="share-text" readonly rows="3"></textarea></label>
+        <p id="copy-status" class="copy-status" role="status"></p>
       </div>
-    </footer>
+      <div class="end-actions"><button class="primary" id="restart" type="button">다시 하기</button><button id="share" type="button">결과 복사</button></div>
+    </section>
+
+    <dialog id="history-dialog" class="history-dialog" aria-labelledby="history-title">
+      <header><div><p class="eyebrow">놓친 단서가 있었나요?</p><h2 id="history-title">대화 기록</h2></div><button class="icon-button" id="close-history" type="button" aria-label="대화 기록 닫기">✕</button></header>
+      <ol id="history-log" class="history-log" aria-label="민수와 나의 이전 대화"></ol>
+      <p class="history-empty" id="history-empty">대화를 시작하면 여기에 기록돼요.</p>
+      <p class="history-footer">기록을 닫으면 읽던 대화로 돌아갑니다.</p>
+    </dialog>
   </main>
 </body>
 </html>
