@@ -1,19 +1,23 @@
-import {endings, situations} from "./chat.mjs";
+import {endings, situations, roundOpenings} from "./chat.mjs?v=5";
 
 export const initialInterest = 60;
 export const maxTurns = 8;
 
-export function newRound() {
-  return {situation: "nickname", score: initialInterest, phase: "intro", messages: [], decisions: [], context: {}, pending: null, ending: null};
+export function newRound(replay = 0) {
+  const index = Number.isSafeInteger(replay) && replay >= 0 ? replay % roundOpenings.length : 0;
+  return {situation: roundOpenings[index], score: initialInterest, phase: "intro", messages: [], decisions: [], context: {}, pending: null, ending: null};
+}
+
+function resolveLines(lines, context) {
+  if (!lines.length || typeof lines[0] === "string") return lines;
+  return lines.find(({when}) => !when || Object.entries(when).every(
+    ([key, value]) => context[key] === value
+  )).lines;
 }
 
 export function intro(round) {
   const situation = situations[round.situation];
-  if (typeof situation.intro[0] === "string") return situation.intro;
-  const version = situation.intro.find(({when}) => !when || Object.entries(when).every(
-    ([key, value]) => round.context[key] === value
-  ));
-  return [...version.lines, ...(situation.tail ?? [])];
+  return [...resolveLines(situation.intro, round.context), ...(situation.tail ?? [])];
 }
 
 export function ready(round) {
@@ -28,6 +32,8 @@ export function choose(round, index) {
   const score = Math.min(100, Math.max(0, round.score + option.delta));
   const choice = {situation: round.situation, text: option.text, delta: score - round.score, why: option.why};
   const decisions = [...round.decisions, choice];
+  const context = {...round.context, ...option.remember};
+  const reaction = resolveLines(option.reaction, context);
   let next = option.next ?? situation.next;
   if (typeof next === "object") {
     next = round.decisions.some(({situation}) => situation === next.ifSeen) ? next.then : next.otherwise;
@@ -39,9 +45,9 @@ export function choose(round, index) {
     score,
     phase: "reply",
     decisions,
-    context: {...round.context, ...option.remember},
+    context,
     pending: {
-      reaction: ending ? [...option.reaction, ...endings[ending].reaction] : option.reaction,
+      reaction: ending ? [...reaction, ...resolveLines(endings[ending].reaction, context)] : reaction,
       next,
       ending,
       reason: option.end ? "request" : null,

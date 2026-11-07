@@ -1,5 +1,5 @@
-import {situations} from "./chat.mjs";
-import {advance, block, choose, initialInterest, intro, maxTurns, newRound, ready} from "./chat-rules.mjs";
+import {situations, roundOpenings} from "./chat.mjs?v=5";
+import {advance, block, choose, initialInterest, intro, maxTurns, newRound, ready} from "./chat-rules.mjs?v=5";
 
 const $ = (id) => document.getElementById(id);
 const conversation = $("conversation");
@@ -21,9 +21,11 @@ let audio = null;
 function readSettings() {
   try {
     const stored = JSON.parse(localStorage.getItem(storageKey));
-    return {fast: stored?.fast === true, sound: stored?.sound === true};
+    const nextOpening = Number.isInteger(stored?.nextOpening) && stored.nextOpening >= 0
+      && stored.nextOpening < roundOpenings.length ? stored.nextOpening : 0;
+    return {fast: stored?.fast === true, sound: stored?.sound === true, nextOpening};
   } catch {
-    return {fast: false, sound: false};
+    return {fast: false, sound: false, nextOpening: 0};
   }
 }
 
@@ -79,7 +81,7 @@ function message(text, side, showUnread = false) {
     if (side === "received") {
       const avatar = document.createElement("img");
       avatar.className = "message-avatar";
-      avatar.src = "./minsu.svg";
+      avatar.src = "./images/minsu-profile-v2.jpg";
       avatar.width = avatar.height = 30;
       avatar.alt = "";
       item.append(avatar);
@@ -199,7 +201,9 @@ function showWelcome() {
 
 function start() {
   resetView();
-  round = newRound();
+  round = newRound(settings.nextOpening);
+  settings.nextOpening = (settings.nextOpening + 1) % roundOpenings.length;
+  saveSettings();
   enableAudio();
   showThread();
   showIntro();
