@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="theme-color" content="#131b1a">
+  <title>영포티 피하기 | 선 긋기 선택형 웹게임</title>
+  <meta name="description" content="카페, 회식, 러닝 크루, 빗속 공방의 사진 이야기에서 상황을 하나 골라 플레이하세요.">
+  <meta name="robots" content="noindex, follow">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="영포티 피하기">
+  <meta property="og:description" content="네 가지 사진 이야기 중 하나를 골라 플레이하세요. 어떻게 답하느냐에 따라 후일담이 달라져요.">
+  <meta property="og:url" content="https://emfls.github.io/youngforty-escape-preview/episodes.html">
+  <meta property="og:image" content="https://emfls.github.io/youngforty-escape-preview/images/cafe-open.jpg">
+  <meta property="og:image:alt" content="카페 주문대에서 손님을 맞는 바리스타">
+  <link rel="canonical" href="https://emfls.github.io/youngforty-escape-preview/episodes.html">
+  <link rel="icon" href="./mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css?v=4">
+  <script type="module" src="./game.mjs?v=4"></script>
+</head>
+<body>
+  <header class="site-header shell">
+    <a class="brand" href="/game/" aria-label="EMFLS 웹게임 목록"><img src="./mark.svg" alt="" width="32" height="32"> EMFLS <span>ARCADE</span></a>
+    <a class="back" href="./">민수와 대화 <span aria-hidden="true">↗</span></a>
+  </header>
+
+  <main class="shell">
+    <div class="masthead">
+      <p class="eyebrow"><span></span> CHOICE SIMULATOR <span class="edition">VOL. 03 · 모바일 미리보기</span></p>
+      <h1>영포티 <em>피하기</em></h1>
+      <p>갑자기 들어온 플러팅. 얼떨결에 끌려가지 않고 내 페이스를 지켜 보자.</p>
+    </div>
+
+    <section id="episode-menu" aria-labelledby="menu-title">
+      <h2 id="menu-title" tabindex="-1">어떤 상황을 플레이할까요?</h2>
+      <p class="menu-intro">한 편씩 골라 플레이해요. 이야기 한 편은 약 10분입니다.</p>
+      <ul id="episode-list" class="episode-list"></ul>
+      <noscript><p class="note">게임을 하려면 브라우저에서 자바스크립트를 켜 주세요.</p></noscript>
+    </section>
+
+    <section id="game" class="game" aria-label="영포티 피하기 게임" hidden>
+      <div class="progress-row">
+        <button id="back-to-menu" class="back-button" type="button">← 상황 목록</button>
+        <p id="chapter-label"></p>
+        <p id="story-progress" class="score"></p>
+      </div>
+
+      <div id="story-screen" class="play-area" hidden>
+        <figure class="scene">
+          <img id="photo" alt="" width="760" height="332">
+          <figcaption><span class="scene-dot"></span><span id="photo-caption"></span></figcaption>
+        </figure>
+        <div class="story">
+          <p class="story-tag" id="story-tag"></p>
+          <h2 id="story-title" tabindex="-1"></h2>
+          <p id="story-reaction" class="reaction" hidden></p>
+          <div id="story-copy" class="story-copy"></div>
+          <figure class="quote" id="quote" hidden>
+            <figcaption id="speaker"></figcaption>
+            <blockquote id="line"></blockquote>
+          </figure>
+          <div class="actions" id="actions"></div>
+        </div>
+      </div>
+
+    </section>
+
+    <p class="note">가상의 상황과 AI 생성 이미지로 만든 코미디 게임입니다. 거절을 존중하지 않는 행동을 소재로 다룹니다.</p>
+
+    <aside class="banner" aria-label="EMFLS 추천 배너">
+      <div><span>EMFLS ARCADE</span><p>쉬어 가고 싶을 땐, 다른 웹게임도 있어요.</p></div>
+      <a href="/game/">웹게임 모아보기 <span aria-hidden="true">↗</span></a>
+    </aside>
+  </main>
+</body>
+</html>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="선글라스를 쓴 민수">
+  <circle cx="48" cy="48" r="48" fill="#bfded9"/>
+  <path d="M13 96c3-15 16-25 35-25s32 10 35 25" fill="#314b53"/>
+  <path d="m33 74 15 12 15-12-7-8H40z" fill="#cf865f"/>
+  <path d="M26 42c0-15 9-25 22-25s22 10 22 25v11c0 15-10 24-22 24S26 68 26 53Z" fill="#eeb489"/>
+  <path d="M26 49c-3-6-6-10-5-15 0-9 8-19 20-20 5-6 16-5 23 0 7 5 10 12 10 21 0 5-3 10-5 14l-3-14c-14-2-23-7-27-12-2 7-7 12-13 14z" fill="#2e333d"/>
+  <path d="M23 43h19l3 4h6l3-4h19l-2 10c-1 4-4 6-9 6s-9-2-10-5l-1-3h-6l-1 3c-2 4-6 5-11 5-4 0-7-2-8-6z" fill="#172b39"/>
+  <path d="m31 47 8 0-5 6zm28 0h8l-5 6z" fill="#c0d8e3" opacity=".8"/>
+  <path d="M43 66c3 3 8 4 13-1" fill="none" stroke="#8a4b38" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="m36 79 12 7-5 10H32zm24 0-12 7 5 10h11z" fill="#e8eeee"/>
+</svg>

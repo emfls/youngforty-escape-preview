@@ -1,21 +1,15 @@
 import {chapters} from "./scenes.mjs?v=3";
-import {chatTurns, chatEndings, changeInterest, initialInterest} from "./chat.mjs?v=3";
 
 const byId = (id) => document.getElementById(id);
 const menu = byId("episode-menu");
 const game = byId("game");
 const storyScreen = byId("story-screen");
-const chatScreen = byId("chat-screen");
 const title = byId("story-title");
 const actions = byId("actions");
 const photo = byId("photo");
 const progress = byId("story-progress");
 const quote = byId("quote");
 const reaction = byId("story-reaction");
-const log = byId("chat-log");
-const chatPrompt = byId("chat-prompt");
-const chatResult = byId("chat-result");
-const chatActions = byId("chat-actions");
 
 function button(label, action, number) {
   const control = document.createElement("button");
@@ -39,13 +33,11 @@ function showMenu() {
   byId("menu-title").focus({preventScroll: true});
 }
 
-function openGame(mode, label) {
+function openGame(label) {
   menu.hidden = true;
   game.hidden = false;
-  storyScreen.hidden = mode !== "story";
-  chatScreen.hidden = mode !== "chat";
+  storyScreen.hidden = false;
   byId("chapter-label").textContent = label;
-  progress.hidden = mode === "chat";
   game.scrollIntoView({block: "start"});
 }
 
@@ -64,7 +56,7 @@ function showParagraphs(element, copy) {
 }
 
 function playEpisode(episode) {
-  openGame("story", episode.place);
+  openGame(episode.place);
   let decision = 0;
 
   function showAct(name, stepIndex, previousReply = "") {
@@ -114,92 +106,24 @@ function focusStory() {
   title.focus({preventScroll: true});
 }
 
-function addMessage(text, side) {
-  const message = document.createElement("li");
-  const speaker = document.createElement("span");
-  const bubble = document.createElement("p");
-  message.className = "message " + side;
-  speaker.className = "message-name";
-  speaker.textContent = side === "sent" ? "나" : "정호";
-  bubble.textContent = text;
-  message.append(speaker, bubble);
-  log.append(message);
-  log.scrollTop = log.scrollHeight;
-}
-
-function playChat() {
-  openGame("chat", "카톡풍 채팅");
-  let interest = initialInterest;
-  let index = 0;
-  log.replaceChildren();
-  chatResult.hidden = true;
-  byId("interest-change").textContent = "";
-  updateInterest();
-
-  function updateInterest() {
-    byId("interest-value").textContent = interest;
-    byId("interest-meter").value = interest;
-  }
-
-  function showTurn() {
-    const [incoming, choices] = chatTurns[index];
-    addMessage(incoming, "received");
-    chatPrompt.textContent = "뭐라고 답할까요?";
-    chatActions.replaceChildren(...choices.map(([label, reply, delta], choiceIndex) => button(label, () => {
-      addMessage(label, "sent");
-      addMessage(reply, "received");
-      const previous = interest;
-      interest = changeInterest(interest, delta);
-      updateInterest();
-      const difference = interest - previous;
-      byId("interest-change").textContent = "호감도 " + (difference > 0 ? "+" : "") + difference;
-      const ending = chatEndings[interest];
-      if (ending) {
-        chatPrompt.textContent = ending.title;
-        chatResult.textContent = ending.copy;
-        chatResult.hidden = false;
-        chatActions.replaceChildren(button("채팅 다시 하기", playChat), button("다른 상황 고르기", showMenu, "←"));
-      } else {
-        index += 1;
-        showTurn();
-      }
-      chatPrompt.focus({preventScroll: true});
-    }, choiceIndex + 1)));
-  }
-
-  showTurn();
-  chatPrompt.focus({preventScroll: true});
-}
-
-for (const [label, description, cover, start] of [
-  ...chapters.map((episode) => [episode.place, episode.description, episode.acts.opening.image, () => playEpisode(episode)]),
-  ["카톡풍 채팅", "둘만 남은 메시지 창. 답장으로 호감도를 0점까지 낮춰 보세요.", null, playChat],
-]) {
+for (const episode of chapters) {
   const item = document.createElement("li");
   const card = document.createElement("button");
   card.type = "button";
   card.className = "episode-card";
-  card.addEventListener("click", start);
-  if (cover) {
-    const image = document.createElement("img");
-    image.src = "./images/" + cover;
-    image.alt = "";
-    image.width = 760;
-    image.height = 332;
-    card.append(image);
-  } else {
-    const art = document.createElement("span");
-    art.className = "chat-art";
-    art.setAttribute("aria-hidden", "true");
-    art.textContent = "정호님이 메시지를 보냈습니다.";
-    card.append(art);
-  }
+  card.addEventListener("click", () => playEpisode(episode));
+  const image = document.createElement("img");
+  image.src = "./images/" + episode.acts.opening.image;
+  image.alt = "";
+  image.width = 760;
+  image.height = 332;
+  card.append(image);
   const content = document.createElement("span");
   content.className = "episode-content";
   const name = document.createElement("strong");
-  name.textContent = label;
+  name.textContent = episode.place;
   const subtitle = document.createElement("span");
-  subtitle.textContent = description;
+  subtitle.textContent = episode.description;
   content.append(name, subtitle);
   card.append(content);
   item.append(card);
