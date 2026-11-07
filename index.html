@@ -6,17 +6,17 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="theme-color" content="#131b1a">
   <title>영포티 피하기 | 선 긋기 선택형 웹게임</title>
-  <meta name="description" content="카페 단골의 쪽지, 회식 2차, 러닝 크루 DM, 빗속의 차편 제안. 네 편의 이야기를 플레이하고 선택에 따라 달라지는 장면과 엔딩을 만나세요.">
+  <meta name="description" content="카페, 회식, 러닝 크루, 빗속 공방에서 상황을 하나 골라 플레이하세요. 별도의 채팅 모드에서는 답장에 따라 호감도가 바뀝니다.">
   <meta name="robots" content="noindex, follow">
   <meta property="og:type" content="website">
   <meta property="og:title" content="영포티 피하기">
-  <meta property="og:description" content="네 편의 현실 코미디. 누구에게 먼저 말을 걸고 어떻게 답하느냐에 따라 다음 장면과 엔딩이 달라져요.">
+  <meta property="og:description" content="네 가지 상황과 채팅 모드 중 하나를 골라 플레이하세요. 어떻게 답하느냐에 따라 후일담이 달라져요.">
   <meta property="og:url" content="https://emfls.github.io/youngforty-escape-preview/">
   <meta property="og:image" content="https://emfls.github.io/youngforty-escape-preview/images/cafe-open.jpg">
   <meta property="og:image:alt" content="카페 주문대에서 손님을 맞는 바리스타">
   <link rel="icon" href="./mark.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./style.css?v=2">
-  <script type="module" src="./game.mjs?v=2"></script>
+  <link rel="stylesheet" href="./style.css?v=3">
+  <script type="module" src="./game.mjs?v=3"></script>
 </head>
 <body>
   <header class="site-header shell">
@@ -26,34 +26,62 @@
 
   <main class="shell">
     <div class="masthead">
-      <p class="eyebrow"><span></span> CHOICE SIMULATOR <span class="edition">VOL. 02 · 모바일 미리보기</span></p>
+      <p class="eyebrow"><span></span> CHOICE SIMULATOR <span class="edition">VOL. 03 · 모바일 미리보기</span></p>
       <h1>영포티 <em>피하기</em></h1>
       <p>갑자기 들어온 플러팅. 얼떨결에 끌려가지 않고 내 페이스를 지켜 보자.</p>
     </div>
 
-    <section id="game" class="game" aria-label="영포티 피하기 게임">
+    <section id="episode-menu" aria-labelledby="menu-title">
+      <h2 id="menu-title" tabindex="-1">어떤 상황을 플레이할까요?</h2>
+      <p class="menu-intro">한 편씩 골라 플레이해요. 이야기 한 편은 약 10분입니다.</p>
+      <ul id="episode-list" class="episode-list"></ul>
+      <noscript><p class="note">게임을 하려면 브라우저에서 자바스크립트를 켜 주세요.</p></noscript>
+    </section>
+
+    <section id="game" class="game" aria-label="영포티 피하기 게임" hidden>
       <div class="progress-row">
-        <p id="chapter-label">프롤로그</p>
-        <ol id="progress" class="progress" aria-label="챕터 진행">
-          <li>01</li><li>02</li><li>03</li><li>04</li>
-        </ol>
-        <p id="score" class="score">완료 <b>0</b> / 4</p>
+        <button id="back-to-menu" class="back-button" type="button">← 상황 목록</button>
+        <p id="chapter-label"></p>
+        <p id="story-progress" class="score"></p>
       </div>
-      <div class="play-area">
+
+      <div id="story-screen" class="play-area" hidden>
         <figure class="scene">
-          <img id="photo" src="./images/cafe-open.jpg" alt="카페 주문대에 선 안경 쓴 손님과 앞치마를 입은 바리스타" width="760" height="332" fetchpriority="high">
-          <figcaption><span class="scene-dot"></span><span id="photo-caption">동네 카페 · 토요일 오후 4:20</span></figcaption>
+          <img id="photo" alt="" width="760" height="332">
+          <figcaption><span class="scene-dot"></span><span id="photo-caption"></span></figcaption>
         </figure>
         <div class="story">
-          <p class="story-tag" id="story-tag">오늘의 미션</p>
-          <h2 id="story-title" tabindex="-1">잠깐, 그 말 무슨 뜻?</h2>
-          <p class="story-copy" id="story-copy">디카페인 표시로 그린 웃는 얼굴을 누군가 썸으로 받아들였다. 카페부터 빗속 공방까지 네 편의 이야기에서 내 다음 행동을 골라 보세요.</p>
-          <div class="quote" id="quote" hidden></div>
-          <ol class="recap" id="recap" hidden></ol>
-          <div class="actions" id="actions">
-            <button id="start" class="primary" type="button" disabled>게임 시작 <span aria-hidden="true">→</span></button>
+          <p class="story-tag" id="story-tag"></p>
+          <h2 id="story-title" tabindex="-1"></h2>
+          <p id="story-reaction" class="reaction" hidden></p>
+          <div id="story-copy" class="story-copy"></div>
+          <figure class="quote" id="quote" hidden>
+            <figcaption id="speaker"></figcaption>
+            <blockquote id="line"></blockquote>
+          </figure>
+          <div class="actions" id="actions"></div>
+        </div>
+      </div>
+
+      <div id="chat-screen" class="chat" hidden>
+        <header class="chat-head">
+          <span class="chat-avatar" aria-hidden="true">정</span>
+          <div>
+            <h2>정호 · 보드게임 모임</h2>
+            <p>어제 단체방에서 번호를 교환한 뒤 처음 온 개인 톡이에요.</p>
           </div>
-          <noscript><p class="note">게임을 하려면 브라우저에서 자바스크립트를 켜 주세요.</p></noscript>
+        </header>
+        <div class="interest">
+          <label for="interest-meter">호감도 <strong id="interest-value">50</strong> / 100</label>
+          <span id="interest-change" aria-live="polite"></span>
+          <meter id="interest-meter" min="0" max="100" value="50"></meter>
+          <p>0점 클리어 · 100점 게임오버</p>
+        </div>
+        <ol id="chat-log" class="chat-log" role="log" aria-label="채팅 메시지" tabindex="0"></ol>
+        <div class="chat-controls">
+          <h3 id="chat-prompt" tabindex="-1">뭐라고 답할까요?</h3>
+          <p id="chat-result" class="story-copy" hidden></p>
+          <div class="actions" id="chat-actions"></div>
         </div>
       </div>
     </section>
