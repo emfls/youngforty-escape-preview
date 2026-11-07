@@ -1,5 +1,5 @@
-import {situations, roundOpenings} from "./chat.mjs?v=6";
-import {advance, block, choose, initialInterest, intro, maxTurns, newRound, ready} from "./chat-rules.mjs?v=6";
+import {roundOpenings} from "./chat.mjs?v=7";
+import {advance, block, choose, initialInterest, intro, maxTurns, newRound, ready, repliesFor} from "./chat-rules.mjs?v=7";
 
 const $ = (id) => document.getElementById(id);
 const conversation = $("conversation");
@@ -214,7 +214,7 @@ function showIntro() {
   $("reply-title").textContent = "민수가 톡을 보내는 중";
   play(intro(round), () => {
     round = ready(round);
-    const options = situations[round.situation].options;
+    const options = repliesFor(round);
     replies.replaceChildren(...options.map((option, index) => {
       const button = document.createElement("button");
       button.type = "button";
@@ -276,9 +276,10 @@ function showEnding() {
   const byImpact = [...round.decisions].sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
   const openings = ending.id === "crush" ? byImpact.filter(({delta}) => delta > 0) : [];
   const last = round.decisions.at(-1);
-  const top = ending.reason === "request" ? [last, ...byImpact.filter((entry) => entry !== last)]
-    : openings.length ? openings : byImpact;
-  $("highlights-title").textContent = openings.length ? "민수가 여지로 읽은 답장" : "결과에 영향을 준 답장";
+  const clue = last?.uses ? round.decisions.find(({evidence}) => evidence === last.uses) : null;
+  const closingChoices = last ? [last, ...(clue ? [clue] : byImpact.filter((entry) => entry !== last))] : [];
+  const top = openings.length ? openings : closingChoices;
+  $("highlights-title").textContent = openings.length ? "민수가 여지로 읽은 답장" : clue ? "단서와 마지막 대응" : "관계를 정리한 답장";
   $("highlights").replaceChildren(...top.slice(0, 2).map((decision) => {
     const item = document.createElement("li");
     item.textContent = "“" + decision.text + "” (" + formatDelta(decision.delta) + ")";
